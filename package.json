@@ -1,0 +1,11 @@
+{
+  "name": "crawlers",
+  "version": "0.0.0",
+  "description": "My web crawlers",
+  "private": true,
+  "main": "index.js",
+  "author": "problem233",
+  "dependencies": {
+    "jsdom": "^11.11.0"
+  }
+}
