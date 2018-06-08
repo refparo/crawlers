@@ -1,7 +1,9 @@
 {
   "private": true,
   "dependencies": {
-    "@types/jsdom": "latest",
     "jsdom": "latest"
+  },
+  "devDependencies": {
+    "@types/jsdom": "latest"
   }
 }
