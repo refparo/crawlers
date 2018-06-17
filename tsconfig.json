@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "outDir": "lib",
+    "allowJs": true,
+    "target": "es5",
+    "lib": [
+      "es6",
+      "dom"
+    ],
+  },
+  "include": [
+    "src"
+  ]
+}
