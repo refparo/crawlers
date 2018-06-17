@@ -1,8 +1,9 @@
 # Crawlers
 
-# Usage
+## Usage
 
-```javascript
+```shell
+$ npm i
 $ npm run repl
 ...
 > const crawlers = require('./lib')
