@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "repl": "tsc && node"
+    "repl": "ts-node"
   },
   "dependencies": {
     "fs-extra": "^6.0.1",
@@ -11,8 +11,9 @@
   },
   "devDependencies": {
     "@types/fs-extra": "latest",
-    "@types/jsdom": "^11.0.5",
-    "@types/lodash": "^4.14.109",
+    "@types/jsdom": "^11.0.6",
+    "@types/lodash": "^4.14.110",
+    "ts-node": "^7.0.0",
     "typescript": "^2.9.2"
   }
 }
