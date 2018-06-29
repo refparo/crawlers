@@ -1,5 +1,5 @@
 'use strict'
-import * as fs from 'fs'
+//import * as fs from 'fs'
 
 /*
 export const isDirectory = (path: string) =>
