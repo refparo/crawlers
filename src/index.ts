@@ -1,4 +1,3 @@
-'use strict'
 import { JSDOM } from 'jsdom'
 
 export const sampleCrawler = async () => {
