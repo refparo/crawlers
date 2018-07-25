@@ -6,7 +6,7 @@
 $ npm i
 $ npm run repl
 ...
-> const crawlers = require('./lib')
+> import * as xxx from './src/xxx'
 > ...
 ```
 
