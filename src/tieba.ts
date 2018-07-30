@@ -11,6 +11,7 @@ interface Image { readonly filename: string, readonly url: string }
 type FloorContent = string | Anchor | Image
 interface Floor {
   readonly author: string
+  readonly time: string
   readonly content: FloorContent[]
 }
 
@@ -42,6 +43,11 @@ export const crawlPage = (url: string) => JSDOM.fromURL(url)
     .filter(elem => elem.getElementsByClassName('ad_bottom_view').length == 0)
     .map(elem => <Floor> ({
       author: elem.getElementsByClassName('p_author_name')[0].textContent,
+      time: Array
+        .from(elem.getElementsByClassName('post-tail-wrap')[0].children)
+        .filter(elem =>
+          elem.textContent.match(/\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}/))[0]
+        .textContent,
       content: Array
         .from(elem.getElementsByClassName('d_post_content')[0].childNodes)
         .map(elem => ({
@@ -81,17 +87,17 @@ export const crawlPost = (url: string, from: number, to: number) =>
 export const exportPostAsMarkdown = async (post: Floor[], file: string) => {
   const dir = file.slice(0, file.lastIndexOf('/') + 1)
   const mapFloor = (floor: Floor) =>
-    `*${floor.author}：*` + "\n\n" +
     floor.content.map(content => {
       if ((<Anchor> content).text)
         return `[${(<Anchor> content).text}](${(<Anchor> content).url})`
       else if ((<Image> content).filename)
         return (`![${(<Image> content).filename}]`
-          + `(image/${(<Image> content).filename})`)
+          + `(images/${(<Image> content).filename})`)
       else if ((<string> content) == '\n')
         return '\n\n'
       else return (<string> content).trim()
-    }).join('')
+    }).join('') +
+    "\n\n" + `*by ${floor.author} at ${floor.time}*`
   const content = post.map(mapFloor).join('\n\n')
   await fs.writeFile(file, content)
   console.log(`wrote post to markdown file: ${file}`)
@@ -104,7 +110,7 @@ export const exportPostAsMarkdown = async (post: Floor[], file: string) => {
     async (prevCh, ch) =>
       (await prevCh).concat(ch.map(img => downloadImage(img, imageDir))),
     Promise.resolve(<{}[]> []))
-  console.log(`exported post: ${file}`)
+  await console.log(`exported post: ${file}`)
 }
 
 export const downloadPostAsMarkdown =
