@@ -84,27 +84,27 @@ export const crawlPost = (url: string, from: number, to: number) =>
       Promise.resolve(<Floor[]>[]))
     .then(withLog(`processed post: ${url}`))
 
+const formatFloor = (floor: Floor) =>
+  floor.content.map(content => {
+    if ((<Anchor> content).text)
+      return `[${(<Anchor> content).text}](${(<Anchor> content).url})`
+    else if ((<Image> content).filename)
+      return (`![${(<Image> content).filename}]`
+        + `(images/${(<Image> content).filename})`)
+    else if ((<string> content) == '\n')
+      return '\n\n'
+    else return (<string> content).trim()
+  }).join('') +
+  "\n\n" + `*by ${floor.author} at ${floor.time}*`
+
 export const exportPostAsMarkdown = async (post: Floor[], file: string) => {
-  const dir = file.slice(0, file.lastIndexOf('/') + 1)
-  const mapFloor = (floor: Floor) =>
-    floor.content.map(content => {
-      if ((<Anchor> content).text)
-        return `[${(<Anchor> content).text}](${(<Anchor> content).url})`
-      else if ((<Image> content).filename)
-        return (`![${(<Image> content).filename}]`
-          + `(images/${(<Image> content).filename})`)
-      else if ((<string> content) == '\n')
-        return '\n\n'
-      else return (<string> content).trim()
-    }).join('') +
-    "\n\n" + `*by ${floor.author} at ${floor.time}*`
-  const content = post.map(mapFloor).join('\n\n')
+  const content = post.map(formatFloor).join('\n\n')
   await fs.writeFile(file, content)
   console.log(`wrote post to markdown file: ${file}`)
 
   const images = (<Image[]> []).concat(...<Image[][]> post.map(floor =>
     floor.content.filter(content => (<Image> content).filename != undefined)))
-  const imageDir = dir + 'images'
+  const imageDir = file.slice(0, file.lastIndexOf('/') + 1) + 'images'
   await safeMkdir(imageDir)
   await chunk(images, 5).reduce(
     async (prevCh, ch) =>
