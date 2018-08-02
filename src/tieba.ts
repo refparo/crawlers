@@ -107,10 +107,10 @@ export const exportPostAsMarkdown = async (post: Floor[], file: string) => {
   const imageDir = file.slice(0, file.lastIndexOf('/') + 1) + 'images'
   await safeMkdir(imageDir)
   await chunk(images, 5).reduce(
-    async (prevCh, ch) =>
-      (await prevCh).concat(ch.map(img => downloadImage(img, imageDir))),
-    Promise.resolve(<{}[]> []))
-  await console.log(`exported post: ${file}`)
+      async (prevCh, ch) =>
+        (await prevCh).concat(ch.map(img => downloadImage(img, imageDir))),
+      Promise.resolve(<{}[]> []))
+    .then(withLog(`exported post: ${file}`))
 }
 
 export const downloadPostAsMarkdown =
