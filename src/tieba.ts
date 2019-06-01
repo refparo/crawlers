@@ -52,23 +52,26 @@ export const crawlPage = (url: string) => JSDOM.fromURL(url)
         .textContent,
       content: Array
         .from(elem.getElementsByClassName('d_post_content')[0].childNodes)
-        // .map(elem => {
-        //   if (! ['#text', 'BR', 'IMG', 'SPAN', 'STRONG'].includes(elem.nodeName))
-        //     console.log(elem.nodeName)
-        //   return elem
-        // })
+        .map(elem => {
+          if (! ['#text', 'A', 'BR', 'IMG', 'SPAN', 'STRONG'].includes(elem.nodeName))
+            console.log(elem.nodeName)
+          return elem
+        })
         .map(elem => (<Map<(elem: any) => any>> {
           '#text': (elem: Text) => elem.textContent || "",
           'SPAN': (elem: HTMLSpanElement) => `*${elem.textContent}*`,
           'STRONG': (elem: HTMLElement) => `**${elem.textContent}**`,
           'BR': () => "\n",
-          'A': (elem: HTMLAnchorElement) => <Anchor> {
-              text: elem.textContent,
-              url: (<Map<() => string>> {
-                "j-no-opener-url": () => elem.href,
-                "at": () =>
-                  'https://tieba.baidu.com' + elem.href
-              })[elem.className]()
+          'A': (elem: HTMLAnchorElement) => {
+            if (elem.className === 'ps_cb') return elem.textContent
+            else return <Anchor> {
+                text: elem.textContent,
+                url: (<Map<() => string>> {
+                  "j-no-opener-url": () => elem.href,
+                  "at": () =>
+                    'https://tieba.baidu.com' + elem.href
+                })[elem.className]()
+              }
           },
           'IMG': (elem: HTMLImageElement) => {
             const pathName = new URL(elem.src).pathname
