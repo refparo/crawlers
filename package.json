@@ -1,19 +1,20 @@
 {
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "repl": "ts-node"
+    "build": "tsc"
   },
   "dependencies": {
-    "fs-extra": "^6.0.1",
-    "jsdom": "^11.11.0",
-    "lodash": "^4.17.10"
+    "fs-extra": "^8.0.1",
+    "jsdom": "^15.1.1",
+    "lodash": "^4.17.11"
   },
   "devDependencies": {
-    "@types/fs-extra": "latest",
-    "@types/jsdom": "^11.0.6",
-    "@types/lodash": "^4.14.110",
-    "ts-node": "^7.0.0",
-    "typescript": "^2.9.2"
+    "@types/fs-extra": "^7.0.0",
+    "@types/jsdom": "^12.2.3",
+    "@types/lodash": "^4.14.133",
+    "@types/node": "^12.0.4",
+    "tslint": "^5.17.0",
+    "typescript": "^3.5.1",
+    "typescript-tslint-plugin": "^0.4.0"
   }
 }
