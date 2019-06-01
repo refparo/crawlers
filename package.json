@@ -1,7 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -rf lib"
   },
   "dependencies": {
     "fs-extra": "^8.0.1",

@@ -52,22 +52,30 @@ export const crawlPage = (url: string) => JSDOM.fromURL(url)
         .textContent,
       content: Array
         .from(elem.getElementsByClassName('d_post_content')[0].childNodes)
+        // .map(elem => {
+        //   if (! ['#text', 'BR', 'IMG', 'SPAN', 'STRONG'].includes(elem.nodeName))
+        //     console.log(elem.nodeName)
+        //   return elem
+        // })
         .map(elem => (<Map<(elem: any) => any>> {
-          '#text': (elem: Node) => elem.textContent,
+          '#text': (elem: Text) => elem.textContent || "",
+          'SPAN': (elem: HTMLSpanElement) => `*${elem.textContent}*`,
+          'STRONG': (elem: HTMLElement) => `**${elem.textContent}**`,
           'BR': () => "\n",
           'A': (elem: HTMLAnchorElement) => <Anchor> {
               text: elem.textContent,
               url: (<Map<() => string>> {
                 "j-no-opener-url": () => elem.href,
                 "at": () =>
-                  'https://https://tieba.baidu.com' + elem.href
+                  'https://tieba.baidu.com' + elem.href
               })[elem.className]()
           },
           'IMG': (elem: HTMLImageElement) => {
-            const src = elem.src
-            const filename = src.slice(src.lastIndexOf('/') + 1)
-            const url = (filename.slice(0, 14) === 'image_emoticon')
-                      ? src
+            const pathName = new URL(elem.src).pathname
+            const isEmoticon = pathName.includes('image_emoticon')
+                            || pathName.includes('images/face')
+            const filename = pathName.slice(pathName.lastIndexOf('/') + 1)
+            const url = isEmoticon ? elem.src
                       : ("https://imgsrc.baidu.com/forum/pic/item/" + filename)
             return <Image> { filename, url }
           }
@@ -85,14 +93,15 @@ export const crawlPost = (url: string, from: number, to: number) =>
 
 const formatFloor = (floor: Floor) =>
   floor.content.map(content => {
-    if ((<Anchor> content).text)
+    if (typeof (<Anchor> content).text === 'string')
       return `[${(<Anchor> content).text}](${(<Anchor> content).url})`
-    else if ((<Image> content).filename)
+    else if (typeof (<Image> content).filename === 'string')
       return (`![${(<Image> content).filename}]`
         + `(images/${(<Image> content).filename})`)
     else if ((<string> content) === '\n')
       return '\n\n'
-    else return (<string> content).trim()
+    else
+      return (<string> content).trim()
   }).join('') +
   "\n\n" + `*by ${floor.author} at ${floor.time}*`
 
