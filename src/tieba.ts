@@ -36,6 +36,16 @@ export const downloadImage = (img: Image, dir: string) =>
     }
   }))
 
+const procImage = (img: string) => {
+  const pathName = new URL(img).pathname
+  const isEmoticon = pathName.includes('image_emoticon')
+                  || pathName.includes('images/face')
+  const filename = pathName.slice(pathName.lastIndexOf('/') + 1)
+  const url = isEmoticon ? img
+            : ("https://imgsrc.baidu.com/forum/pic/item/" + filename)
+  return <Image> { filename, url }
+}
+
 export const crawlPage = (url: string) => JSDOM.fromURL(url)
   .then(dom => dom.window.document)
   .then(withLog(`crawled post page: ${url}`))
@@ -63,7 +73,7 @@ export const crawlPage = (url: string) => JSDOM.fromURL(url)
           'STRONG': (elem: HTMLElement) => `**${elem.textContent}**`,
           'BR': () => "\n",
           'A': (elem: HTMLAnchorElement) => {
-            if (elem.className === 'ps_cb') return elem.textContent
+            if (['ps_cb', ''].includes(elem.className)) return elem.textContent
             else return <Anchor> {
                 text: elem.textContent,
                 url: (<Map<() => string>> {
@@ -73,15 +83,9 @@ export const crawlPage = (url: string) => JSDOM.fromURL(url)
                 })[elem.className]()
               }
           },
-          'IMG': (elem: HTMLImageElement) => {
-            const pathName = new URL(elem.src).pathname
-            const isEmoticon = pathName.includes('image_emoticon')
-                            || pathName.includes('images/face')
-            const filename = pathName.slice(pathName.lastIndexOf('/') + 1)
-            const url = isEmoticon ? elem.src
-                      : ("https://imgsrc.baidu.com/forum/pic/item/" + filename)
-            return <Image> { filename, url }
-          }
+          'IMG': (elem: HTMLImageElement) => procImage(elem.src),
+          'DIV': (elem: HTMLDivElement) =>
+            procImage((<HTMLImageElement> elem.childNodes[0]).src)
         })[elem.nodeName](elem))
     })))
   .then(withLog(`processed post page: ${url}`))
