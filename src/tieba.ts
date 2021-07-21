@@ -18,10 +18,12 @@ interface Floor {
 interface Map<T> { [key: string]: T }
 
 export const downloadImage = (img: Image, dir: string) =>
-  new Promise((resolve, reject) => https.get(img.url, res => {
+  new Promise((resolve, reject) => {
     const dest = dir + '/' + img.filename
-    if (fsSync.existsSync(dest)) resolve() // skip if image already exists
-    else {
+    if (fsSync.existsSync(dest)) {
+      console.log(`skipped image: ${img.url}`)
+      resolve() // skip if image already exists
+    } else https.get(img.url, res => {
       const stream = fsSync.createWriteStream(dest)
       res.pipe(stream)
       stream.on('finish', res => {
@@ -31,18 +33,21 @@ export const downloadImage = (img: Image, dir: string) =>
       })
       stream.on('error', err => {
         fs.unlink(dest)
+        console.log(`failed image: ${img.url}`)
         reject(err)
       })
-    }
-  }))
+    })
+  })
 
-const procImage = (img: string) => {
+const procImage = (img: string, floor: string, no: number) => {
   const pathName = new URL(img).pathname
   const isEmoticon = pathName.includes('image_emoticon')
                   || pathName.includes('images/face')
-  const filename = pathName.slice(pathName.lastIndexOf('/') + 1)
+  const filename = isEmoticon ? pathName.slice(pathName.lastIndexOf('/') + 1)
+                 : `${floor}.${no}.jpg`
   const url = isEmoticon ? img
-            : ("https://imgsrc.baidu.com/forum/pic/item/" + filename)
+            : ("https://imgsrc.baidu.com/forum/pic/item/" +
+               pathName.slice(pathName.lastIndexOf('/') + 1))
   return <Image> { filename, url }
 }
 
@@ -53,21 +58,21 @@ export const crawlPage = (url: string) => JSDOM.fromURL(url)
   .then(floors => Array.from(floors)
     // remove ads
     .filter(elem => elem.getElementsByClassName('ad_bottom_view').length === 0)
-    .map(elem => <Floor> ({
-      author: elem.getElementsByClassName('p_author_name')[0].textContent,
+    .map(floor => <Floor> ({
+      author: floor.getElementsByClassName('p_author_name')[0].textContent,
       time: Array
-        .from(elem.getElementsByClassName('post-tail-wrap')[0].children)
+        .from(floor.getElementsByClassName('post-tail-wrap')[0].children)
         .filter(elem =>
           elem.textContent!.match(/\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}/))[0]
         .textContent,
       content: Array
-        .from(elem.getElementsByClassName('d_post_content')[0].childNodes)
+        .from(floor.getElementsByClassName('d_post_content')[0].childNodes)
         .map(elem => {
           if (! ['#text', 'A', 'BR', 'IMG', 'SPAN', 'STRONG'].includes(elem.nodeName))
             console.log(elem.nodeName)
           return elem
         })
-        .map(elem => (<Map<(elem: any) => any>> {
+        .map((elem, i) => (<Map<(elem: any) => any>> {
           '#text': (elem: Text) => elem.textContent || "",
           'SPAN': (elem: HTMLSpanElement) => `*${elem.textContent}*`,
           'STRONG': (elem: HTMLElement) => `**${elem.textContent}**`,
@@ -83,9 +88,15 @@ export const crawlPage = (url: string) => JSDOM.fromURL(url)
                 })[elem.className]()
               }
           },
-          'IMG': (elem: HTMLImageElement) => procImage(elem.src),
+          'IMG': (elem: HTMLImageElement) => procImage(elem.src,
+            Array.from(floor.getElementsByClassName('tail-info'))
+              .filter(elem => elem.textContent!.match(/^\d+楼$/))[0]
+              .textContent!, i),
           'DIV': (elem: HTMLDivElement) =>
-            procImage((<HTMLImageElement> elem.childNodes[0]).src)
+            procImage((<HTMLImageElement> elem.childNodes[0]).src,
+              Array.from(floor.getElementsByClassName('tail-info'))
+              .filter(elem => elem.textContent!.match(/^\d+楼$/))[0]
+              .textContent!, i)
         })[elem.nodeName](elem))
     })))
   .then(withLog(`processed post page: ${url}`))
